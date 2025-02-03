@@ -40,7 +40,6 @@ var baileys_1 = require("@whiskeysockets/baileys");
 function connectToWhatsApp() {
     return __awaiter(this, void 0, void 0, function () {
         var _a, state, saveCreds, sock;
-        var _this = this;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0: return [4 /*yield*/, (0, baileys_1.useMultiFileAuthState)('auth_info_baileys')];
@@ -55,6 +54,8 @@ function connectToWhatsApp() {
                         var _a, _b;
                         var connection = update.connection, lastDisconnect = update.lastDisconnect;
                         if (connection === 'close') {
+                            if (!lastDisconnect)
+                                return;
                             var shouldReconnect = ((_b = (_a = lastDisconnect.error) === null || _a === void 0 ? void 0 : _a.output) === null || _b === void 0 ? void 0 : _b.statusCode) !== baileys_1.DisconnectReason.loggedOut;
                             console.log('connection closed due to ', lastDisconnect.error, ', reconnecting ', shouldReconnect);
                             // reconnect if not logged out
@@ -66,29 +67,18 @@ function connectToWhatsApp() {
                             console.log('opened connection');
                         }
                     });
-                    sock.ev.on('messages.upsert', function (event) { return __awaiter(_this, void 0, void 0, function () {
-                        var _i, _a, m;
-                        return __generator(this, function (_b) {
-                            switch (_b.label) {
-                                case 0:
-                                    _i = 0, _a = event.messages;
-                                    _b.label = 1;
-                                case 1:
-                                    if (!(_i < _a.length)) return [3 /*break*/, 4];
-                                    m = _a[_i];
-                                    console.log(JSON.stringify(m, undefined, 2));
-                                    console.log('replying to', m.key.remoteJid);
-                                    return [4 /*yield*/, sock.sendMessage(m.key.remoteJid, { text: 'Hello Word' })];
-                                case 2:
-                                    _b.sent();
-                                    _b.label = 3;
-                                case 3:
-                                    _i++;
-                                    return [3 /*break*/, 1];
-                                case 4: return [2 /*return*/];
-                            }
-                        });
-                    }); });
+                    sock.ev.on('messages.upsert', function (_a) {
+                        var messages = _a.messages;
+                        console.log('got messages', messages);
+                    });
+                    // sock.ev.on('messages.upsert', async event => {
+                    //     for (const m of event.messages) {
+                    //         console.log(JSON.stringify(m, undefined, 2))
+                    //         console.log('replying to', m.key.remoteJid)
+                    //         await sock.sendMessage(m.key.remoteJid!, { text: 'Hello Word' })
+                    //         return;
+                    //     }
+                    // })
                     // to storage creds (session info) when it updates
                     sock.ev.on('creds.update', saveCreds);
                     return [2 /*return*/];
@@ -96,5 +86,4 @@ function connectToWhatsApp() {
         });
     });
 }
-// run in main file
-connectToWhatsApp();
+window.connectToWhatsApp = connectToWhatsApp;
